@@ -1,0 +1,20 @@
+(lang dune 3.13)
+
+(name naloga1)
+
+(generate_opam_files true)
+
+(source
+ (github marindereggi/naloga1-demo))
+
+(authors "Marin Gazvoda de Reggi")
+
+(maintainers "Marin Gazvoda de Reggi")
+
+(package
+ (name naloga1)
+ (synopsis "Naloga 1")
+ (description "Naloga 1 - PS2023/24 OCaml")
+ (depends ocaml dune)
+ (tags
+  (ocaml xkcd naloga naloga1 "PS2023/24")))

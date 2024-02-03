@@ -1,0 +1,4 @@
+(executable
+ (public_name naloga1)
+ (name main)
+ (libraries naloga1 domainslib))
