@@ -12,18 +12,14 @@ let sanitize str =
   in
   fields_of_string lower ~keep:alphanum
 
-let words_in_comic ?(silent = true) id =
-  match Naloga1.Xkcd.fetch_comic id with
-  | Error e ->
-      if not silent then Printf.eprintf "Error #%d: %s\n" id e;
-      []
-  | Ok comic ->
-      let sanitized =
-        sanitize comic.title
-        @ sanitize
-            (if comic.transcript <> "" then comic.transcript else comic.tooltip)
-      in
-      List.filter (fun word -> String.length word >= 4) sanitized
+let words_in_comic id =
+  let open Naloga1.Xkcd in
+  let sanitize_comic c =
+    sanitize c.title
+    @ sanitize (if c.transcript <> "" then c.transcript else c.tooltip)
+    |> List.filter (fun word -> String.length word >= 4)
+  in
+  fetch_comic id |> Result.map sanitize_comic
 
 let print_top freqs n =
   let order (word1, freq1) (word2, freq2) =
@@ -42,20 +38,28 @@ let get_appendfn ht =
     in
     Mutex.protect !m (fun () -> List.iter update_ht keylist)
 
-let parse_num_domains () =
+let parse_args () =
   let num_domains = ref 7 in
+  let verbose = ref false in
   Arg.parse
-    [ ("-domains", Arg.Set_int num_domains, "amount of domains") ]
-    ignore "Usage: naloga1 [-domains <int>]";
-  !num_domains
+    [
+      ("-domains", Arg.Set_int num_domains, "amount of domains");
+      ("-verbose", Arg.Set verbose, "print errors");
+    ]
+    ignore "Usage: naloga1 [-domains <int>] [-verbose]";
+  (!num_domains, !verbose)
 
 let () =
-  let num_domains = parse_num_domains ()
+  let num_domains, verbose = parse_args ()
   and num_comics = Naloga1.Xkcd.fetch_latest_comic () |> fun comic -> comic.id
   and freqs = Hashtbl.create 20_000 in
 
   let append_to_hashtbl = get_appendfn freqs in
-  let body id = words_in_comic id |> append_to_hashtbl in
+  let body id =
+    words_in_comic id |> function
+    | Ok words -> append_to_hashtbl words
+    | Error e -> if verbose then Printf.eprintf "Error #%d: %s\n" id e
+  in
 
   let open Domainslib.Task in
   let pool = setup_pool ~num_domains () in
