@@ -56,7 +56,7 @@ let () =
 
   let append_to_hashtbl = get_appendfn freqs in
   let body id =
-    words_in_comic id |> function
+    match words_in_comic id with
     | Ok words -> append_to_hashtbl words
     | Error e -> if verbose then Printf.eprintf "Error #%d: %s\n" id e
   in
