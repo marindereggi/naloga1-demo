@@ -39,8 +39,7 @@ let get_appendfn ht =
     Mutex.protect !m (fun () -> List.iter update_ht keylist)
 
 let parse_args () =
-  let num_domains = ref 7 in
-  let verbose = ref false in
+  let num_domains = ref 7 and verbose = ref false in
   Arg.parse
     [
       ("-domains", Arg.Set_int num_domains, "amount of domains");
